@@ -9,9 +9,6 @@ import utilities as utils
 tn = '20240920'
 dsm = utils.define_dsm(tn)
 
-# Test comsol simulation
-# iff, K = utils.postprocess_influence_functions(dsm)
-
 # # Fitting errors
 # seg0 = dsm.segment[0]
 # local_fit_err = utils.fitting_error_plots(seg0.mask, seg0.ZM, seg0.IFF, seg0.R)
@@ -55,6 +52,3 @@ dsm = utils.define_dsm(tn)
 # dsm.get_position()
 # dsm.acquire_map(plt_mask = anular_mask)
 # dsm.acquire_map()
-
-# # CapSens matrix
-# meas_gap = utils.capsens_measure(dm, 1)
