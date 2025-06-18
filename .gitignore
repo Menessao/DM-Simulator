@@ -6,6 +6,7 @@
 *.npy
 *.asv
 *.txt
+!requirements.txt
 
 # Ignore folders created with configuration parameters
 ConfigFiles/

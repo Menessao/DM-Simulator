@@ -1,0 +1,7 @@
+numpy>1.17
+scipy
+matplotlib
+astropy
+pytest
+scipy
+thin-plate-spline
