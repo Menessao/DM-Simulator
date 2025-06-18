@@ -1,0 +1,11 @@
+# Ignore data files
+*.fits
+*.npy
+*.asv
+*.txt
+
+# Ignore folders created with configuration parameters
+Configuration/
+20240920/
+20250214/
+JWST/

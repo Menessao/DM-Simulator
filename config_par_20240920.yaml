@@ -1,0 +1,21 @@
+
+[DM]
+n_rings        = 3.       # number of hexagonal segment rings
+hex_side       = 1.       # [m] hexagonal side length
+hex_gap        = 0.04     # [m] gap between hexagonal segments
+act_pitch      = 0.2      # [m] inter-actuator distance
+act_radius     = 0.005    # [m] actuator radius
+center_segment = 1        # [bool] wheter to include the central hexagonal segment or not
+
+[OPT]
+pixel_scale = 200.  # pixels per meter
+opt_radius = 4.    # [m] pupil radius
+pupil_x = 1.        # [m] mask center x coordinate
+pupil_y = -1.        # [m] mask center y coordinate
+
+[MECH]
+RoC = 5.       # [m] Radius of curvature of the optical surface
+thk = 2e-3     # [m] Mirror thickness
+E = 90.4e+9    # [Pa] Young modulus of the mirror material
+rho = 2530     # [kg/m^3] Mirror material density
+nu = 0.24      # [-] Poisson coefficient of the mirror material
