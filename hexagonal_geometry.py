@@ -23,8 +23,7 @@ class HexagonGeometry():
     def __init__(self, TN):
         
         # Read configuration files
-        config_path = './ConfigFiles/' + TN + '.yaml'
-        dm_par, opt_par, mech_par = read_config(config_path)
+        dm_par, opt_par, mech_par = read_config(TN)
         
         self.gap = dm_par[0]
         self.hex_side_len = dm_par[1]

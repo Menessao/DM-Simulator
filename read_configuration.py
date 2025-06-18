@@ -1,17 +1,15 @@
 import configparser
 import numpy as np
+import os
 
-# setup configparser
-config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-
-def read_config(path):
+def read_config(TN):
     """
     Returns a list of parameters read from a configuration .yaml file
 
     Parameters
     ----------
-    path : string
-        Complete path to the configuration file.
+    TN : string
+        Name to the configuration file.
 
     Returns
     -------
@@ -21,7 +19,10 @@ def read_config(path):
         Optical parameters list.
 
     """
-    config.read(path)
+    # setup configparser
+    config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    config_path = './ConfigFiles/' + TN + '.yaml'
+    config.read(config_path)
 
      # DM configuration parameters
     dm_conf = config['DM']
