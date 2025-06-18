@@ -59,4 +59,6 @@ def read_config(TN):
     mech_par = np.array([RoC,thk,len,E,rho,nu])
     mech_par = mech_par.astype(float)
 
-    return dm_par, opt_par, mech_par
+    save_path = './DataFiles/' + TN + '/'
+
+    return dm_par, opt_par, mech_par, save_path

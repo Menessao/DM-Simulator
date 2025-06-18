@@ -59,7 +59,7 @@ class HexagonGeometry():
     def __init__(self, TN):
         
         # Read configuration files
-        dm_par, opt_par, mech_par = read_config(TN)
+        dm_par, opt_par, mech_par, save_path = read_config(TN)
         
         self.gap = dm_par[0]
         self.hex_side_len = dm_par[1]
@@ -75,7 +75,7 @@ class HexagonGeometry():
 
         self.mech_par = mech_par
         
-        self.savepath = './' + TN + '/'
+        self.savepath = save_path
         self.n_hex = n_hexagons(self.n_rings)
         
         # h = (self.gap + 2.*self.hex_side_len*SIN60)*(self.n_rings+1)/2. 
@@ -83,7 +83,7 @@ class HexagonGeometry():
         # R = np.sqrt(h**2+d**2) # inscribed circle radius
         
         try: # Create new folder
-            os.mkdir(TN)
+            os.mkdir(save_path)
         except FileExistsError: # Folder already existing
             pass
         
