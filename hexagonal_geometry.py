@@ -47,7 +47,7 @@ class HexagonGeometry():
         # R = np.sqrt(h**2+d**2) # inscribed circle radius
         
         try: # Create new folder
-            os.mkdir(TN)
+            os.mkdir(self.savepath)
         except FileExistsError: # Folder already existing
             pass
         
