@@ -2,6 +2,7 @@ import numpy as np
 from mirror_segment import Segment
 import matrix_calculator as matcalc
 import my_fits_package as myfits
+import os
 
 from deformable_mirror import DeformableMirror as DM
 
@@ -99,7 +100,7 @@ class SegmentedMirror(DM):
         None.
 
         """
-        file_name = self.geom.savepath + 'initial_segment_scramble.fits'
+        file_name = os.path.join(self.geom.savepath, 'initial_segment_scramble.fits')
         
         try:
             flat_img = myfits.read_fits(file_name)
@@ -139,7 +140,7 @@ class SegmentedMirror(DM):
     def compute_global_zern_matrix(self, n_modes):
         """ Computes or reads the globl Zernike modes interaction matrix """
     
-        file_path = self.geom.savepath + str(n_modes) + 'modes_global_zernike_mat.fits'
+        file_path = os.path.join(self.geom.savepath, str(n_modes) + 'modes_global_zernike_mat.fits')
         
         try:
             self.glob_ZM = myfits.read_fits(file_path)
@@ -159,7 +160,7 @@ class SegmentedMirror(DM):
         distributing the result to all segments and assemling the global
         sparse interaction matrix """
         
-        file_path = self.geom.savepath + str(n_modes) + 'modes_local_zernike_mat.fits'
+        file_path = os.path.join(self.geom.savepath, str(n_modes) + 'modes_local_zernike_mat.fits')
         
         try:
             ZM = myfits.read_fits(file_path)
@@ -178,8 +179,8 @@ class SegmentedMirror(DM):
         distributing the result to all segments and assemling the global
         sparse IFF and R matrices """
         
-        self.IFF_path = self.geom.savepath + 'global_influence_functions_matrix.fits'
-        self.R_path = self.geom.savepath + 'global_reconstructor_matrix.fits'
+        self.IFF_path = os.path.join(self.geom.savepath, 'global_influence_functions_matrix.fits')
+        self.R_path = os.path.join(self.geom.savepath, 'global_reconstructor_matrix.fits')
         
         # Read/compute IFF and R
         try:
@@ -208,7 +209,7 @@ class SegmentedMirror(DM):
         coordinates of the segment with given segment_id"""
         
         if segment_id is None:
-            file_path = self.geom.savepath + 'Reference_IFF_image_cube.fits'
+            file_path = os.path.join(self.geom.savepath, 'Reference_IFF_image_cube.fits')
             try:
                 IFF_cube = myfits.read_fits(file_path, is_ma = True)
                 return IFF_cube
@@ -222,7 +223,7 @@ class SegmentedMirror(DM):
        
         if segment_id is not None:
             for k,idx in enumerate(segment_id):
-                file_path = self.geom.savepath + 'segment' + str(idx) + '_IFF_image_cube.fits'
+                file_path = os.path.join(self.geom.savepath, 'segment' + str(idx) + '_IFF_image_cube.fits')
                 myfits.write_to_fits(IFF_cube, file_path)
             
         return IFF_cube
@@ -304,9 +305,9 @@ class SegmentedMirror(DM):
         n_hex = self.geom.n_hex
         n_pix = np.sum(1-self.geom.local_mask)
         
-        self.coords_path = self.geom.savepath + 'global_actuator_coordinates' #.fits'
+        self.coords_path = os.path.join(self.geom.savepath, 'global_actuator_coordinates.fits')
         try:
-            self.act_coords = np.load(self.coords_path + '.npy') #myfits.read_fits(self.coords_path)
+            self.act_coords = myfits.read_fits(self.coords_path) #np.load(self.coords_path + '.npy') #
         except FileNotFoundError:
             self.act_coords = np.tile(self.geom.local_act_coords,(n_hex,1))
             self.act_coords += np.tile(self.geom.hex_centers,n_acts).reshape([n_hex*n_acts,2])
@@ -323,7 +324,7 @@ class SegmentedMirror(DM):
             segment.n_acts = (self.n_acts[k]).astype(int)
             
         # Save cooeds to fits
-        np.save(self.coords_path, self.act_coords) # myfits.write_to_fits(self.act_coords, self.coords_path)
+        myfits.write_to_fits(self.act_coords, self.coords_path) #np.save(self.coords_path, self.act_coords) # 
 
         
         

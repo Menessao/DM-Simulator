@@ -106,9 +106,9 @@ class HexagonGeometry():
 
         """
     
-        file_path = self.savepath + 'local_act_coords' #'.fits'
+        file_path = os.path.join(self.savepath, 'local_act_coords.fits') #'.fits'
         try:
-            local_act_coords = np.load(file_path + '.npy') # myfits.read_fits(file_path)
+            local_act_coords = myfits.read_fits(file_path) # np.load(file_path + '.npy')
             return local_act_coords
         except FileNotFoundError:
             pass
@@ -142,7 +142,7 @@ class HexagonGeometry():
         local_act_coords = act_coords*self.hex_side_len
             
         # Save result
-        np.save(file_path, local_act_coords) #myfits.write_to_fits(local_act_coords, file_path)
+        myfits.write_to_fits(local_act_coords, file_path) #np.save(file_path, local_act_coords) #
         
         return local_act_coords
 
@@ -151,7 +151,7 @@ class HexagonGeometry():
         """ Forms the hexagonal mask to be placed 
         at the given hexagonal coordinates """
     
-        file_path = self.savepath + 'local_mask.fits'
+        file_path = os.path.join(self.savepath, 'local_mask.fits')
         try:
             self.local_mask = myfits.read_fits(file_path, is_bool = True)
             return 
@@ -181,9 +181,9 @@ class HexagonGeometry():
         """ Defines and saves the coordinates of the 
         centers of all hexagonal segments """
         
-        file_path = self.savepath + 'hex_centers_coords' #'.fits'
+        file_path = os.path.join(self.savepath, 'hex_centers_coords.fits')
         try:
-            self.hex_centers = np.load(file_path + '.npy') # myfits.read_fits(file_path)
+            self.hex_centers = myfits.read_fits(file_path) # np.load(file_path + '.npy')
             return
         except FileNotFoundError:
             pass
@@ -222,17 +222,17 @@ class HexagonGeometry():
     
         # Save as private variable and to .fits
         self.hex_centers = hex_centers
-        np.save(file_path, hex_centers) #myfits.write_to_fits(hex_centers, file_path)
+        myfits.write_to_fits(hex_centers, file_path) #np.save(file_path, hex_centers) #
         
     
     def _assemble_global_mask(self):
         """ Assemble the global segmented mask """
         
-        ids_file_path = self.savepath + 'valid_ids'
-        file_path = self.savepath + 'global_mask.fits'
+        ids_file_path = os.path.join(self.savepath, 'valid_ids.fits') #os.path.join(self.savepath, 'valid_ids')
+        file_path = os.path.join(self.savepath, 'global_mask.fits')
         try:
             self.global_mask = myfits.read_fits(file_path, is_bool=True)
-            self.valid_ids = np.load(ids_file_path + '.npy') #myfits.read_fits(ids_file_path)
+            self.valid_ids = myfits.read_fits(ids_file_path) # np.load(ids_file_path + '.npy') 
             return
         except FileNotFoundError:
             pass
@@ -284,13 +284,13 @@ class HexagonGeometry():
         
         # Save as private variable and to .fits
         self.valid_ids = valid_ids
-        np.save(ids_file_path, valid_ids) # myfits.write_to_fits(valid_ids, ids_file_path)
+        myfits.write_to_fits(valid_ids, ids_file_path) # np.save(ids_file_path, valid_ids) #
         
         
     def _assemble_optical_mask(self):
         """ Assemble the optical mask """
         
-        file_path = self.savepath + 'optical_mask.fits'
+        file_path = os.path.join(self.savepath, 'optical_mask.fits')
         try:
             self.optical_mask = myfits.read_fits(file_path, is_bool=True)
             return
