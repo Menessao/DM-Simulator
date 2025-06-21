@@ -9,5 +9,6 @@
 !requirements.txt
 
 # Ignore folders created with configuration parameters
-ConfigFiles/
-DataFiles/
+ConfigFiles/*
+!ConfigFiles/JWST.yaml
+DataFiles/*
