@@ -21,7 +21,9 @@ def read_config(TN):
     """
     # setup configparser
     config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-    config_path = './ConfigFiles/' + TN + '.yaml'
+
+    cdir = os.getcwd() #os.path.abspath(os.path.dirname(__file__))
+    config_path = os.path.join(cdir, 'ConfigFiles', TN + '.yaml')
     config.read(config_path)
 
      # DM configuration parameters
@@ -45,7 +47,6 @@ def read_config(TN):
 
     opt_par = np.array([pix_scale, opt_rad, pup_x, pup_y])
     opt_par = opt_par.astype(float)
-
     
     # Mechanical parameters
     mech_conf = config['MECH']
@@ -59,6 +60,6 @@ def read_config(TN):
     mech_par = np.array([RoC,thk,len,E,rho,nu])
     mech_par = mech_par.astype(float)
 
-    save_path = './DataFiles/' + TN + '/'
+    save_path = os.path.join(cdir, 'DataFiles', TN)
 
     return dm_par, opt_par, mech_par, save_path

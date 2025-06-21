@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 from segmented_deformable_mirror import SegmentedMirror
 from segment_geometry import HexagonGeometry
-from matrix_calculator import matmul, calculate_influence_functions, compute_mirror_modes, cube2mat, interpolate_influence_functions, scale2uint8
-import my_fits_package as myfits
+from matrix_calculator import matmul#, calculate_influence_functions, compute_mirror_modes, cube2mat, interpolate_influence_functions, scale2uint8
+#import my_fits_package as myfits
 
 
 def define_dsm(TN:str, n_global_zern:int = 7, n_local_zern:int = 13):
