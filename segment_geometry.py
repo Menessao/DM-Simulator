@@ -217,7 +217,7 @@ class HexagonGeometry():
                     hex_centers[hex_ctr+j+1+ring_ctr:hex_ctr+j+1+6*ring_ctr:ring_ctr,:] = cw_rotate(aux, angles)
                     
         if self.center_bool is False: # remove center segment
-            hex_centers = hex_centers[1:]
+            hex_centers = hex_centers[1:,:]
             self.n_hex -= 1
     
         # Save as private variable and to .fits
