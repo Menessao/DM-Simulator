@@ -274,7 +274,7 @@ class SegmentedMirror(DM):
         if do_save:
             myfits.write_to_fits(self.IFF, self.IFF_path)
             myfits.write_to_fits(self.R, self.R_path)
-            np.save(self.coords_path, self.act_coords) 
+            myfits.write_to_fits(self.coords_path, self.act_coords) #np.save(self.coords_path, self.act_coords) 
             
             
     def _define_segment_array(self):
