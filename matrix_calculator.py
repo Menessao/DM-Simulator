@@ -199,8 +199,8 @@ def compute_zernike_matrix(mask, n_modes):
 def scale2uint8(img):
     """ Scales an ndarray to uint8 """
     
-    img -= min(img)
-    img = img/max(img) * (2**8-1)
+    img -= np.min(img)
+    img = img/np.max(img) * (2**8-1)
     img = np.round(img)
     
     return (img).astype(np.uint8)
