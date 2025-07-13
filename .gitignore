@@ -6,6 +6,8 @@
 *.npy
 *.asv
 *.txt
+*.ipynb
+
 !requirements.txt
 
 # Ignore folders created with configuration parameters
