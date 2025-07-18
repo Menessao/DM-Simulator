@@ -1,8 +1,8 @@
 import numpy as np
 from tps import ThinPlateSpline # for the simulated IFF
 
-import os
-import subprocess
+#import os
+#import subprocess
 from scipy.interpolate import griddata
 
 from zernike_polynomials import generate_zernike_matrix as assemble_zern_mat
@@ -104,54 +104,6 @@ def simulate_influence_functions(act_coords, local_mask, pix_scale, amps = 1.0):
     cube = np.ma.masked_array(img_cube, cube_mask, dtype=np.uint8)
     
     return cube
-
-
-def calculate_influence_functions(act_coords, local_mask, mech_parameters):
-    """ Calculate the actuator influence functions 
-    using the COMSOL multiphysics FEA software """
-
-    # Define paths
-    script_path = os.path.join(os.getcwd(),'COMSOL_Files')
-    output_path = os.path.join(script_path,'SimOutputFiles')
-    input_path = os.path.join(script_path,'SimInputFiles')
-    script_name = 'hexagonal_shell'
-
-    # Write input data
-    np.savetxt(os.path.join(input_path,'act_coords.txt'), act_coords)
-    np.savetxt(os.path.join(input_path,'mech_parameters.txt'), mech_parameters)
-
-    # Perform the computation
-    res = subprocess.run(f"matlab -batch {script_name}", cwd = script_path, 
-                         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    # # Read output   
-    # K = np.loadtxt(os.path.join(output_path,'stiffness_matrix.txt'))
-    # iff_data = np.loadtxt(os.path.join(output_path,'iffs.txt'))
-    # in_mesh = np.loadtxt(os.path.join(output_path,'mesh.txt'))
-
-    # # Post-process iffs
-    # H,W = np.shape(local_mask)
-    # iffs = interpolate_influence_functions(iff_data, in_mesh, np.array([W,H]))
-    # n_acts = len(act_coords)
-    # img_cube = np.zeros([H,W,n_acts])
-
-    # for k in range(n_acts):
-    #     print(k) # debug
-    #     img_k = iffs[:,:,k]
-    #     img_mask = np.isnan(img_k)
-    #     flat_img = img_k[~img_mask]        
-    #     uint8_img = scale2uint8(flat_img) # scale to uint8
-    #     new_img = np.zeros_like(img_mask)
-    #     new_img[~img_mask] = uint8_img
-    #     img_cube[:,:,k] = new_img
-    #     local_mask = np.logical_or(local_mask,img_mask)
-
-    # # Masked array
-    # cube_mask = np.tile(local_mask,n_acts)
-    # cube_mask = np.reshape(cube_mask, np.shape(img_cube), order = 'F')
-    # cube = np.ma.masked_array(img_cube, cube_mask, dtype=np.uint8)
-
-    # return cube, K
 
 
 def interpolate_influence_functions(iffs, in_mesh, npix = np.array([256,256],dtype=int) ):
