@@ -5,3 +5,4 @@ astropy
 pytest
 scipy
 thin-plate-spline
+arte
