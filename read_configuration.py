@@ -23,7 +23,7 @@ def read_config(TN):
     config = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
 
     cdir = os.getcwd() #os.path.abspath(os.path.dirname(__file__))
-    config_path = os.path.join(cdir, 'ConfigFiles', TN + '.yaml')
+    config_path = os.path.join(cdir, 'ConfigFiles', TN + '.ini')
     config.read(config_path)
 
      # DM configuration parameters

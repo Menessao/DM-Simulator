@@ -63,7 +63,7 @@ def compute_mirror_modes(K):
     returning the eigenmodes and eignevalues sorted in order
     of increasing stiffness """
 
-    U,lambdas,V = np.linalg.svd(K, full_matrices=False)
+    _,lambdas,V = np.linalg.svd(K, full_matrices=False)
 
     eigvals = np.sort(lambdas)
     col_ids = np.argsort(lambdas)
@@ -251,25 +251,6 @@ def define_capsens_matrix(mask, pix_scale, act_coords, r_in, r_out, capsens_coor
     
     return CSMAT
 
-
-
-# def rescale_img(img, n_pix: int):
-    
-#     len_x,len_y = np.shape(img)
-#     rows = np.repeat(np.arange(len_x),len_y) + max(0,(len_y-len_x)/2)
-#     cols = np.tile(np.arange(len_y),len_x) + max(0,(len_x-len_y)/2)
-#     xy = np.linspace(0, max(len_x,len_y), n_pix)
-#     gx,gy = np.meshgrid(xy,xy)
-    
-#     rescaled_img = griddata((cols,rows),img.flatten(),(gx,gy))
-#     rescaled_img = np.reshape(rescaled_img,[n_pix,n_pix])
-    
-#     if hasattr(img, 'mask'):
-#         rescaled_mask = griddata((cols,rows),img.mask.flatten(),(gx,gy))
-#         rescaled_mask = np.reshape(rescaled_mask,[n_pix,n_pix])
-#         rescaled_img = np.ma.masked_array(rescaled_img, rescaled_mask)
-    
-#     return rescaled_img
     
 
 

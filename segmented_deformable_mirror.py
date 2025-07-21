@@ -1,8 +1,11 @@
 import numpy as np
+
 from mirror_segment import Segment
 import matrix_calculator as matcalc
 import my_fits_package as myfits
 import os
+
+# from arte.utils.radial_profile import computeRadialProfile
 
 from deformable_mirror import DeformableMirror as DM
 
@@ -135,6 +138,54 @@ class SegmentedMirror(DM):
             self.act_pos -= self.act_pos
         else:
             self.acquire_map(flat_img, plt_title = 'Segment scramble')
+
+    
+    def update_act_coords(self, segment_ids, new_act_coords, do_save:bool = True):
+        """ Updates the actuator coordinates of the segment with given
+        segment_id, updating the IFF and R matrices accordingly """
+        
+        n_acts = int(len(self.act_coords)/self.geom.n_hex)
+        n_new = len(new_act_coords) 
+        
+        if n_new > n_acts:
+            raise NotImplementedError('Current number of actuators is ' + str(n_acts) + 
+                                      ' an increase to ' + str(n_new) + ' is not yet implemented')
+        elif n_new < n_acts:
+            nan_padding = np.empty([n_acts - n_new,2])
+            nan_padding.fill(np.nan)
+            new_act_coords = np.vstack([new_act_coords, nan_padding])
+            
+        # Compute IFF and R matrices
+        IFF_cube = self._compute_local_IFF_cube(new_act_coords, segment_ids, simulate=True)
+        loc_IFF = matcalc.cube2mat(IFF_cube)
+        loc_R = matcalc.compute_reconstructor(loc_IFF)
+            
+        for segm_id in segment_ids:
+            act_ids = np.arange(segm_id*n_acts,(segm_id+1)*n_acts)
+            seg = self.segment[segm_id]
+            
+            # Update actuator coordinates
+            old_act_coords = seg.act_coords# - self.segment[segment_id].center
+            seg.act_coords += new_act_coords - old_act_coords
+            self.act_coords[act_ids] = new_act_coords + seg.center
+            
+            # Update IFF and R matrices
+            # using += in order to update global at the same time
+            old_IFF = seg.IFF
+            seg.IFF += loc_IFF - old_IFF 
+            old_R = seg.R
+            seg.R += loc_R - old_R
+            seg.n_acts += n_new - seg.n_acts
+            
+            # Reset shape and position
+            seg.surface *= 0
+            seg.act_pos *= 0
+        
+        # Save to .fits
+        if do_save:
+            myfits.write_to_fits(self.IFF, self.IFF_path)
+            myfits.write_to_fits(self.R, self.R_path)
+            myfits.write_to_fits(self.coords_path, self.act_coords) #np.save(self.coords_path, self.act_coords) 
         
         
     def compute_global_zern_matrix(self, n_modes):
@@ -174,7 +225,7 @@ class SegmentedMirror(DM):
             segment.ZM = self.ZM[k]
             
         
-    def initialize_IFF_and_R_matrices(self, simulate:bool = True):
+    def initialize_IFF_and_R_matrices(self):
         """ Initializes the local IFF and R matrices (same for all segments)
         distributing the result to all segments and assemling the global
         sparse IFF and R matrices """
@@ -202,11 +253,11 @@ class SegmentedMirror(DM):
         for k,segment in enumerate(self.segment):
             segment.IFF = self.IFF[k]
             segment.R = self.R[k]
+
             
-            
-    def _compute_local_IFF_cube(self, ref_act_coords, segment_id = None, simulate:bool = True):
+    def _compute_local_IFF_cube(self, ref_act_coords, segment_id = None):
         """ Reads or computes the IFF image cube for the actuator
-        coordinates of the segment with given segment_id"""
+        coordinates of the segment with given segment_id """
         
         if segment_id is None:
             file_path = os.path.join(self.geom.savepath, 'Reference_IFF_image_cube.fits')
@@ -216,65 +267,14 @@ class SegmentedMirror(DM):
             except FileNotFoundError:
                 pass   
         
-        if simulate:
-            IFF_cube = matcalc.simulate_influence_functions(ref_act_coords, self.geom.local_mask, self.geom.pix_scale)
-        else:
-            IFF_cube = matcalc.calculate_influence_functions(ref_act_coords, self.geom.local_mask, self.geom.mech_par)
+        IFF_cube = matcalc.simulate_influence_functions(ref_act_coords, self.geom.local_mask, self.geom.pix_scale)
        
         if segment_id is not None:
-            for k,idx in enumerate(segment_id):
-                file_path = os.path.join(self.geom.savepath, 'segment' + str(idx) + '_IFF_image_cube.fits')
+            for segm_id in segment_id:
+                file_path = os.path.join(self.geom.savepath, 'segment' + str(segm_id) + '_IFF_image_cube.fits')
                 myfits.write_to_fits(IFF_cube, file_path)
             
         return IFF_cube
-            
-            
-    def update_act_coords(self, segment_ids, new_act_coords, do_save:bool = True):
-        """ Updates the actuator coordinates of the segment with given
-        segment_id, updating the IFF and R matrices accordingly """
-        
-        n_acts = int(len(self.act_coords)/self.geom.n_hex)
-        n_new = len(new_act_coords) 
-        
-        if n_new > n_acts:
-            raise NotImplementedError('Current number of actuators is ' + str(n_acts) + 
-                                      ' an increase to ' + str(n_new) + ' is not yet implemented')
-        elif n_new < n_acts:
-            nan_padding = np.empty([n_acts - n_new,2])
-            nan_padding.fill(np.nan)
-            new_act_coords = np.vstack([new_act_coords, nan_padding])
-            
-        # Compute IFF and R matrices
-        IFF_cube = self._compute_local_IFF_cube(new_act_coords, segment_ids, simulate=True)
-        loc_IFF = matcalc.cube2mat(IFF_cube)
-        loc_R = matcalc.compute_reconstructor(loc_IFF)
-            
-        for k,segm_id in enumerate(segment_ids):
-            act_ids = np.arange(segm_id*n_acts,(segm_id+1)*n_acts)
-            seg = self.segment[segm_id]
-            
-            # Update actuator coordinates
-            old_act_coords = seg.act_coords# - self.segment[segment_id].center
-            seg.act_coords += new_act_coords - old_act_coords
-            self.act_coords[act_ids] = new_act_coords + seg.center
-            
-            # Update IFF and R matrices
-            # using += in order to update global at the same time
-            old_IFF = seg.IFF
-            seg.IFF += loc_IFF - old_IFF 
-            old_R = seg.R
-            seg.R += loc_R - old_R
-            seg.n_acts += n_new - seg.n_acts
-            
-            # Reset shape and position
-            seg.surface *= 0
-            seg.act_pos *= 0
-        
-        # Save to .fits
-        if do_save:
-            myfits.write_to_fits(self.IFF, self.IFF_path)
-            myfits.write_to_fits(self.R, self.R_path)
-            myfits.write_to_fits(self.coords_path, self.act_coords) #np.save(self.coords_path, self.act_coords) 
             
             
     def _define_segment_array(self):

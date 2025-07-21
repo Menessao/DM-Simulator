@@ -63,7 +63,7 @@ def define_dsm(TN:str, n_global_zern:int = 7, n_local_zern:int = 13):
     
     # Global influence functions and global reconstructor
     print('Initializing influence functions and reconstructor matrices ...')
-    sdm.initialize_IFF_and_R_matrices(simulate = True)
+    sdm.initialize_IFF_and_R_matrices()
     IFF = sdm.IFF
     R = sdm.R
     cmd_for_zern = matmul(R,flat_shape)
@@ -76,6 +76,7 @@ def define_dsm(TN:str, n_global_zern:int = 7, n_local_zern:int = 13):
     cmd_ids = np.tile(cmd_ids,int(np.ceil(n_hex/(n_acts))))
     cmd_ids = cmd_ids[0:n_hex]
     cmd_ids = cmd_ids + n_acts*np.arange(n_hex)
+    print(cmd_ids)
     cmd[cmd_ids] = 1 #np.ones(n_hex)
     flat_img = matmul(IFF,cmd)
     sdm.acquire_map(flat_img, plt_title='Actuators influence functions')
@@ -226,20 +227,6 @@ def update_act_coords_on_ring(dm, n_ring:int, do_save:bool = False):
     dm.update_act_coords(hex_ids, new_coords, do_save)
 
 
-def find_act_ids(img, thr:float = None):
-
-    if isinstance(img, np.masked_array):
-        flat_img = img.data[~img.mask]
-    else:
-        flat_img = img.flatten()
-
-    if thr is None:
-        thr = 0.95*np.max(np.abs(flat_img))
-
-    ids = np.arange(np.size(flat_img))
-    pix_ids = ids[np.abs(flat_img) > thr]
-
-    return pix_ids
     
     
 # def capsens_measure(dm, segment_id):

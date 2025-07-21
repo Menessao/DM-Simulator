@@ -25,7 +25,7 @@ class DeformableMirror():
         pass
 
 
-    def acquire_map(self, surf2plot = None, plt_title:str = None, plt_mask = None):
+    def acquire_map(self, surf2plot = None, plt_title:str = '', plt_mask = None):
         """
         Plots surf2plot or (default) the segment's
         current shape on the DM mask
@@ -140,6 +140,43 @@ class DeformableMirror():
         # Update positions and shape
         self.act_pos += cmd_amps
         self.surface += matmul(self.IFF, cmd_amps)
+
+    
+    def compute_PSF(self, surface = None, oversampling: int = 4):
+        """ Computes the mirror PSF """
+
+        if surface is None:
+            surface = self.surface
+
+        pix_ids = self.valid_ids.flatten()
+            
+        image = np.zeros(np.size(self.mask))
+        image[pix_ids] = surface
+        image = np.reshape(image, np.shape(self.mask))
+        img = np.ma.masked_array(image, self.mask)
+
+        pad_img = np.pad(img, pad_width = np.min(np.shape(img))*oversampling)
+
+        psf = np.fft.fft2(pad_img)
+        psf = np.fft.fftshift(psf)
+        # psf *= 1/np.sum(psf)
+
+        return psf 
+    
+    
+    def compute_PSD(self, surface = None):
+        """ Computes the mirror PSD """
+
+        from arte.utils.radial_profile import computeRadialProfile
+
+        oversampling = int(4)
+        psf = self.compute_PSF(surface, oversampling)
+        power = np.abs(psf)**2
+
+        nx = np.min(np.shape(self.mask))*(oversampling+1)
+        psd, pix_distance = computeRadialProfile(power, centerInPxX=nx//2, centerInPxY=nx//2)
+
+        return psd, pix_distance
         
     
     def compute_flat(self, offset = None):
