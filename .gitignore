@@ -12,5 +12,5 @@
 
 # Ignore folders created with configuration parameters
 ConfigFiles/*
-!ConfigFiles/JWST.yaml
+!ConfigFiles/JWST.ini
 DataFiles/*
