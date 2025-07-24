@@ -87,7 +87,7 @@ class DeformableMirror():
         """
         
         pos = self.act_pos.copy()
-        x,y = self.act_coords[:,0], self.act_coords[:,1] 
+        x,y = self.act_coords[0], self.act_coords[1] 
         
         act_pix_size = 3
         if np.sum(self.n_acts) < 100:
@@ -159,17 +159,16 @@ class DeformableMirror():
 
         psf = np.fft.fft2(pad_img)
         psf = np.fft.fftshift(psf)
-        # psf *= 1/np.sum(psf)
+        psf *= 1/np.sum(psf)
 
         return psf 
     
     
-    def compute_PSD(self, surface = None):
+    def compute_PSD(self, surface = None, oversampling:int = 4):
         """ Computes the mirror PSD """
 
         from arte.utils.radial_profile import computeRadialProfile
 
-        oversampling = int(4)
         psf = self.compute_PSF(surface, oversampling)
         power = np.abs(psf)**2
 

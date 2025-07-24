@@ -124,19 +124,19 @@ class HexagonGeometry():
         acts_per_side = int(acts_per_side-1)
         n_acts_tri = sum_n(acts_per_side)
         
-        act_coords = np.zeros([n_acts_tri*6+1,2])
+        act_coords = np.zeros([2,n_acts_tri*6+1])
         
         for k in range(acts_per_side):
             y = np.linspace(SIN60*k*dx,0.,k+1)
             x = (k+1)*dx - COS60/SIN60 * y
             n = k+1
-            p = np.zeros([6*n,2])
-            p[0:n,0] = x
-            p[0:n,1] = y
-            p[n:2*n,:] = cw_rotate(p[0:n,:].T,np.array([np.pi/3]))
-            p[2*n:3*n,:] = cw_rotate(p[n:2*n,:].T,np.array([np.pi/3]))
-            p[3*n:,:] = cw_rotate(p[0:3*n,:].T,np.array([np.pi]))
-            act_coords[1+sum_n(k)*6:1+sum_n(k+1)*6,:] = p
+            p = np.zeros([2,6*n])
+            p[0,0:n] = x
+            p[1,0:n] = y
+            p[:,n:2*n] = cw_rotate(p[:,0:n],np.array([np.pi/3]))
+            p[:,2*n:3*n] = cw_rotate(p[:,n:2*n],np.array([np.pi/3]))
+            p[:,3*n:] = cw_rotate(p[:,0:3*n],np.array([np.pi]))
+            act_coords[:,1+sum_n(k)*6:1+sum_n(k+1)*6] = p
             
         # Rescaling
         local_act_coords = act_coords*self.hex_side_len
@@ -184,12 +184,14 @@ class HexagonGeometry():
         file_path = os.path.join(self.savepath, 'hex_centers_coords.fits')
         try:
             self.hex_centers = myfits.read_fits(file_path) # np.load(file_path + '.npy')
+            if self.center_bool is False: 
+                self.n_hex -= 1
             return
         except FileNotFoundError:
             pass
         
         # Number of hexes
-        hex_centers = np.zeros([self.n_hex,2])
+        hex_centers = np.zeros([2,self.n_hex])
         
         # Height of hex + gap
         L = self.gap + 2.*self.hex_side_len*SIN60
@@ -204,20 +206,19 @@ class HexagonGeometry():
             R = L*ring_ctr
             
             aux = np.array([R*SIN60,R*COS60])
-            hex_centers[hex_ctr,:] = aux
-            
-            hex_centers[hex_ctr+ring_ctr:hex_ctr+6*ring_ctr:ring_ctr,:] = cw_rotate(aux, angles)
+            hex_centers[:,hex_ctr] = aux
+            hex_centers[:,hex_ctr+ring_ctr:hex_ctr+6*ring_ctr:ring_ctr] = cw_rotate(aux, angles)
             
             if ring_ctr > 1:
                 for j in range(ring_ctr-1):
                     shift = self.gap + 2.*self.hex_side_len*SIN60
-                    aux[0] = hex_centers[hex_ctr,0] 
-                    aux[1] = hex_centers[hex_ctr,1] - (j+1)*shift
-                    hex_centers[hex_ctr+j+1,:] = aux
-                    hex_centers[hex_ctr+j+1+ring_ctr:hex_ctr+j+1+6*ring_ctr:ring_ctr,:] = cw_rotate(aux, angles)
+                    aux[0] = hex_centers[0,hex_ctr] 
+                    aux[1] = hex_centers[1,hex_ctr] - (j+1)*shift
+                    hex_centers[:,hex_ctr+j+1] = aux
+                    hex_centers[:,hex_ctr+j+1+ring_ctr:hex_ctr+j+1+6*ring_ctr:ring_ctr] = cw_rotate(aux, angles)
                     
         if self.center_bool is False: # remove center segment
-            hex_centers = hex_centers[1:,:]
+            hex_centers = hex_centers[:,1:]
             self.n_hex -= 1
     
         # Save as private variable and to .fits
@@ -245,7 +246,7 @@ class HexagonGeometry():
         Nx = np.ceil((L*self.n_rings*SIN60 +self.hex_side_len*(0.5+COS60))*2*self.pix_scale)
         
         # Hexagon centers pixel coordinates
-        pix_coords = self.hex_centers*self.pix_scale + np.array([Nx,Ny])/2.
+        pix_coords = self.hex_centers*self.pix_scale + np.array([[Nx],[Ny]])/2.
         
         My,Mx = np.shape(self.local_mask)
         x = np.arange(Mx,dtype=int)
@@ -260,10 +261,10 @@ class HexagonGeometry():
         rep_local_col = np.tile(local_col_idx,self.n_hex)
         
         hex_data_len = np.sum(1-self.local_mask)
-        rep_pix_coords = np.repeat(pix_coords, hex_data_len, axis = 0)
+        rep_pix_coords = np.repeat(pix_coords, hex_data_len, axis = 1)
         
-        global_row_idx = (rep_local_row + rep_pix_coords[:,1]).astype(int)
-        global_col_idx = (rep_local_col + rep_pix_coords[:,0]).astype(int)
+        global_row_idx = (rep_local_row + rep_pix_coords[1,:]).astype(int)
+        global_col_idx = (rep_local_col + rep_pix_coords[0,:]).astype(int)
         
         row_ids = np.reshape(global_row_idx,[self.n_hex,hex_data_len])
         col_ids = np.reshape(global_col_idx,[self.n_hex,hex_data_len])

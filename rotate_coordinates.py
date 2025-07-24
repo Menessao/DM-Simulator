@@ -36,4 +36,4 @@ def cw_rotate(vec, angles):
 
         rot_vec[:,k*n_pts:(k+1)*n_pts] = np.reshape(aux_vec,[2,n_pts])
 
-    return rot_vec.T
+    return rot_vec

@@ -237,11 +237,10 @@ class SegmentedMirror(DM):
         try:
             self.IFF = myfits.read_fits(self.IFF_path)
             self.R = myfits.read_fits(self.R_path)
-            
+
         except FileNotFoundError:
-            IFF_cube = self._compute_local_IFF_cube(self.geom.local_act_coords)
-            
-            loc_IFF = matcalc.cube2mat(IFF_cube)
+            loc_IFF = self._compute_local_IFFs(self.geom.local_act_coords)
+            # loc_IFF = matcalc.cube2mat(IFF_cube)
             self.IFF = np.tile(loc_IFF,(self.geom.n_hex,1,1))
             myfits.write_to_fits(self.IFF, self.IFF_path)
             
@@ -255,26 +254,26 @@ class SegmentedMirror(DM):
             segment.R = self.R[k]
 
             
-    def _compute_local_IFF_cube(self, ref_act_coords, segment_id = None):
-        """ Reads or computes the IFF image cube for the actuator
+    def _compute_local_IFFs(self, ref_act_coords, segment_id = None):
+        """ Reads or computes the IFFs for the actuator
         coordinates of the segment with given segment_id """
         
         if segment_id is None:
-            file_path = os.path.join(self.geom.savepath, 'Reference_IFF_image_cube.fits')
+            file_path = os.path.join(self.geom.savepath, 'Reference_IFFs.fits')
             try:
-                IFF_cube = myfits.read_fits(file_path, is_ma = True)
-                return IFF_cube
+                IFF = myfits.read_fits(file_path, is_ma = True)
+                return IFF
             except FileNotFoundError:
                 pass   
         
-        IFF_cube = matcalc.simulate_influence_functions(ref_act_coords, self.geom.local_mask, self.geom.pix_scale)
+        IFF = matcalc.simulate_influence_functions(ref_act_coords, self.geom.local_mask, self.geom.pix_scale)
        
         if segment_id is not None:
             for segm_id in segment_id:
-                file_path = os.path.join(self.geom.savepath, 'segment' + str(segm_id) + '_IFF_image_cube.fits')
-                myfits.write_to_fits(IFF_cube, file_path)
+                file_path = os.path.join(self.geom.savepath, 'segment' + str(segm_id) + '_IFFs.fits')
+                myfits.write_to_fits(IFF, file_path)
             
-        return IFF_cube
+        return IFF
             
             
     def _define_segment_array(self):
@@ -292,8 +291,8 @@ class SegmentedMirror(DM):
         # Initialize segment array
         self.segment = []
         
-        for k,coords in enumerate(self.geom.hex_centers):
-            self.segment.append(Segment(coords, self.geom.local_mask, local_valid_ids))
+        for k in range(self.geom.n_hex):
+            self.segment.append(Segment(self.geom.hex_centers[:,k], self.geom.local_mask, local_valid_ids))
             
             
     def _initialize_actuator_coordinates(self):
@@ -301,7 +300,7 @@ class SegmentedMirror(DM):
         for all segments in the mirror """
         
         self.geom.local_act_coords = self.geom.initialize_segment_act_coords()
-        n_acts = len(self.geom.local_act_coords)
+        n_acts = np.shape(self.geom.local_act_coords)[1]
         n_hex = self.geom.n_hex
         n_pix = np.sum(1-self.geom.local_mask)
         
@@ -309,21 +308,27 @@ class SegmentedMirror(DM):
         try:
             self.act_coords = myfits.read_fits(self.coords_path) #np.load(self.coords_path + '.npy') #
         except FileNotFoundError:
-            self.act_coords = np.tile(self.geom.local_act_coords,(n_hex,1))
-            self.act_coords += np.tile(self.geom.hex_centers,n_acts).reshape([n_hex*n_acts,2])
+            Xcoords = np.tile(self.geom.local_act_coords[0,:],n_hex) + np.repeat(self.geom.hex_centers[0,:],n_acts)
+            Ycoords = np.tile(self.geom.local_act_coords[1,:],n_hex) + np.repeat(self.geom.hex_centers[1,:],n_acts)
+            self.act_coords = np.vstack((Xcoords,Ycoords))
+            # self.act_coords = np.tile(self.geom.local_act_coords,(1,n_hex))
+            # self.act_coords += np.repeat(self.geom.hex_centers,n_acts).reshape([2,n_hex*n_acts])
         
         self.surface = np.zeros(np.sum(1-self.mask))
-        self.act_pos = np.zeros(len(self.act_coords))
+        self.act_pos = np.zeros(np.shape(self.act_coords)[1])
         self.n_acts = (np.ones(n_hex)*n_acts).astype(int)
-        
+
         for k, segment in enumerate(self.segment):
-            segment.act_coords = self.act_coords[n_acts*k:n_acts*(k+1),:] #- segment.center
-            segment.act_pix_coords = matcalc.get_pixel_coords(segment.mask, self.geom.pix_scale, segment.act_coords - segment.center)
+            segment.act_coords = self.act_coords[:,n_acts*k:n_acts*(k+1)] #- segment.center
+            coords = segment.act_coords.copy()
+            coords[0] = segment.act_coords[0] - np.repeat(segment.center[0],n_acts)
+            coords[1] = segment.act_coords[1] - np.repeat(segment.center[1],n_acts)
+            segment.act_pix_coords = matcalc.get_pixel_coords(segment.mask, coords, self.geom.pix_scale) 
             segment.act_pos = self.act_pos[n_acts*k:n_acts*(k+1)]
             segment.surface = self.surface[n_pix*k:n_pix*(k+1)]
             segment.n_acts = (self.n_acts[k]).astype(int)
             
-        # Save cooeds to fits
+        # Save coords to fits
         myfits.write_to_fits(self.act_coords, self.coords_path) #np.save(self.coords_path, self.act_coords) # 
 
         

@@ -49,7 +49,7 @@ def write_to_fits(data_vec, file_path:str):
 
 
 # Reading files
-def _read_fits_file(file_path:str, idx:int, is_bool:bool, img_mask = None):
+def _read_fits_file(file_path:str, idx:int = 0, is_bool:bool = False, img_mask = None):
     """
     Reads a single fits file.
 
@@ -72,17 +72,17 @@ def _read_fits_file(file_path:str, idx:int, is_bool:bool, img_mask = None):
 
     """
 
-    with fits.open(file_path) as hdu:
+    hdu = fits.open(file_path)
 
-        if is_bool: # Boolean array
-            data_out = np.array(hdu[idx].data).astype(bool)
+    if is_bool: # Boolean array
+        data_out = np.array(hdu[idx].data).astype(bool)
 
-        elif img_mask is not None: # masked array
-            img = np.array(hdu[idx].data)
-            data_out = np.ma.masked_array(img, mask=img_mask)
+    elif img_mask is not None: # masked array
+        img = np.array(hdu[idx].data)
+        data_out = np.ma.masked_array(img, mask=img_mask)
 
-        else: # default
-            data_out = np.array(hdu[idx].data)
+    else: # default
+        data_out = np.array(hdu[idx].data)
 
     return data_out
 
