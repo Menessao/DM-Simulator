@@ -152,30 +152,36 @@ class DeformableMirror():
             
         image = np.zeros(np.size(self.mask))
         image[pix_ids] = surface
-        image = np.reshape(image, np.shape(self.mask))
-        img = np.ma.masked_array(image, self.mask)
+        phase = np.reshape(image, np.shape(self.mask))
 
-        pad_img = np.pad(img, pad_width = np.min(np.shape(img))*oversampling)
+        nx,ny = np.shape(self.mask)
+        npix = np.max((nx,ny))
+        x_pad = (npix*oversampling-nx)//2
+        y_pad = (npix*oversampling-ny)//2
 
-        psf = np.fft.fft2(pad_img)
-        psf = np.fft.fftshift(psf)
-        psf *= 1/np.sum(psf)
+        pad_phase = np.pad(phase, ((x_pad,x_pad),(y_pad,y_pad)))
+        pad_mask = np.pad(self.mask, ((x_pad,x_pad),(y_pad,y_pad)), 'constant', constant_values=1)
+        pad_img = np.ma.masked_array(np.exp(1j*pad_phase), pad_mask)
+
+        psf = np.fft.fftshift(np.fft.fft2(pad_img))
+        # psf *= 1/np.sum(psf)
 
         return psf 
     
     
-    def compute_PSD(self, surface = None, oversampling:int = 4):
-        """ Computes the mirror PSD """
+    # def compute_PSD(self, surface = None, oversampling:int = 4, pix_scale:float=1):
+    #     """ Computes the mirror PSD """
 
-        from arte.utils.radial_profile import computeRadialProfile
+    #     from arte.utils.radial_profile import computeRadialProfile
 
-        psf = self.compute_PSF(surface, oversampling)
-        power = np.abs(psf)**2
+    #     psf = self.compute_PSF(surface, oversampling)
+    #     power = np.abs(psf**2)
 
-        nx = np.min(np.shape(self.mask))*(oversampling+1)
-        psd, pix_distance = computeRadialProfile(power, centerInPxX=nx//2, centerInPxY=nx//2)
+    #     nx,ny = np.shape(self.mask)[0]*oversampling, np.shape(self.mask)[1]*oversampling
+    #     psd, pix_distance = computeRadialProfile(power, centerInPxX=nx//2, centerInPxY=ny//2)
+    #     rad_distance = pix_distance/pix_scale
 
-        return psd, pix_distance
+    #     return psd, rad_distance
         
     
     def compute_flat(self, offset = None):
