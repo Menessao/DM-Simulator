@@ -142,25 +142,30 @@ class DeformableMirror():
         self.surface += matmul(self.IFF, cmd_amps)
 
     
-    def compute_PSF(self, surface = None, oversampling: int = 4):
+    def compute_PSF(self, pupil_mask = None, surface = None, oversampling: int = 4):
         """ Computes the mirror PSF """
+
+        if pupil_mask is None:
+            pupil_mask = self.mask.copy()
+
+        mask = np.logical_or(pupil_mask, self.mask)
 
         if surface is None:
             surface = self.surface
 
         pix_ids = self.valid_ids.flatten()
             
-        image = np.zeros(np.size(self.mask))
+        image = np.zeros(np.size(mask))
         image[pix_ids] = surface
-        phase = np.reshape(image, np.shape(self.mask))
+        phase = np.reshape(image, np.shape(mask))
 
-        nx,ny = np.shape(self.mask)
+        nx,ny = np.shape(mask)
         npix = np.max((nx,ny))
         x_pad = (npix*oversampling-nx)//2
         y_pad = (npix*oversampling-ny)//2
 
         pad_phase = np.pad(phase, ((x_pad,x_pad),(y_pad,y_pad)))
-        pad_mask = np.pad(self.mask, ((x_pad,x_pad),(y_pad,y_pad)), 'constant', constant_values=1)
+        pad_mask = np.pad(mask, ((x_pad,x_pad),(y_pad,y_pad)), 'constant', constant_values=1)
         pad_img = np.ma.masked_array(np.exp(1j*pad_phase), pad_mask)
 
         psf = np.fft.fftshift(np.fft.fft2(pad_img))

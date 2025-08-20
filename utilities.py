@@ -6,7 +6,7 @@ from segment_geometry import HexagonGeometry
 from matrix_calculator import matmul
 
 
-def define_dsm(TN:str, n_global_zern:int = 7, n_local_zern:int = 13):
+def define_dsm(TN:str, global_zern_radial_order:int = 6, local_zern_radial_order:int = 5):
     """
     Performs the basic operations to define a segmented
     mirror object from the data in the configuration file
@@ -16,13 +16,13 @@ def define_dsm(TN:str, n_global_zern:int = 7, n_local_zern:int = 13):
     TN : string
         Configuration file tracking number.
         
-    n_global_zern : int, optional
-        Number of Zernike modes for the IM on the global mask. 
-        The default is 7.
+    global_zern_radial_order : int, optional
+        Radial order of Zernike modes for the IM on the global mask. 
+        The default is 6.
         
-    n_local_zern : int, optional
-        Number of Zernike modes for the IM on the single segment. 
-        The default is 13.
+    local_zern_radial_order : int, optional
+        Radial order of Zernike modes for the IM on the single segment. 
+        The default is 5.
 
     Returns
     -------
@@ -35,6 +35,9 @@ def define_dsm(TN:str, n_global_zern:int = 7, n_local_zern:int = 13):
     
     print('Initializing segmented mirror class ...')
     sdm = SegmentedMirror(geom)
+
+    n_global_zern = global_zern_radial_order*(global_zern_radial_order-1)//2
+    n_local_zern = local_zern_radial_order*(local_zern_radial_order-1)//2
     
     # Global Zernike matrix
     print('Computing ' + str(n_global_zern) + ' modes global Zernike interaction matrix ...')
@@ -111,7 +114,7 @@ def fitting_error_plots(mask, IM, IFF, R, pix_ids = None):
     
     flat_img = np.zeros(np.size(mask))
     flat_mask = mask.flatten()
-    # cube = np.zeros([N_modes,np.shape(mask)[0],np.shape(mask)[1]])
+    cube = np.zeros([N,np.shape(mask)[0],np.shape(mask)[1]])
     
     for k in range(N):
         des_shape = IM[:,k]
@@ -129,21 +132,26 @@ def fitting_error_plots(mask, IM, IFF, R, pix_ids = None):
             
         flat_img[pix_ids] = shape_err
         img = np.reshape(flat_img, np.shape(mask))
-        img = np.ma.masked_array(img, mask)
-        # cube[k] = img
-        plt.figure()
-        plt.imshow(img, origin = 'lower', cmap = 'inferno')
+        cube[k] = img
+
+    n_cols = 5
+    n_rows = int(np.ceil(N/n_cols))
+    plt.figure(figsize=(3.3*n_cols,3.2*n_rows))
+    for i in range(N):
+        plt.subplot(n_rows,n_cols,i+1)
+        plt.imshow(np.ma.masked_array(cube[i], mask), origin = 'lower', cmap = 'inferno')
         plt.colorbar()
-        title_str = f"Mode {k+1} shape error\n RMS: {RMS_vec[k]:.2e}"
-        plt.title(title_str)
+        plt.title(f"Mode {i+1} shape error\n RMS: {RMS_vec[i]:.2e}")
         
     plt.figure()
-    plt.plot(RMS_vec,'-o',color='orange')
-    plt.xlabel('Mode index')
-    plt.ylabel('Shape RMS (normalized)')
-    plt.title('Fitting error')
+    plt.plot(np.arange(N)+1, RMS_vec,'-o',color='orange')
+    plt.xlabel('Noll id')
+    plt.ylabel('RMS')
+    plt.title('Zernike fitting error')
+    plt.xticks(np.arange(N)+1)
     plt.grid('on')
-    plt.axis('tight')
+    # plt.gca().set_yticklabels([f'{x:.0%}' for x in plt.gca().get_yticks()])
+    plt.xlim([0.5,N+0.5])
     
     return RMS_vec
 
