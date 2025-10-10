@@ -22,7 +22,7 @@ class DeformableMirror():
     """
     
     def __init__(self):
-        pass
+        self._flat_cmd = None
 
 
     def acquire_map(self, surf2plot = None, plt_title:str = '', plt_mask = None):
@@ -166,7 +166,7 @@ class DeformableMirror():
 
         pad_phase = np.pad(phase, ((x_pad,x_pad),(y_pad,y_pad)))
         pad_mask = np.pad(mask, ((x_pad,x_pad),(y_pad,y_pad)), 'constant', constant_values=1)
-        pad_img = np.ma.masked_array(np.exp(1j*pad_phase), pad_mask)
+        pad_img = np.ma.masked_array((1-pad_mask)*np.exp(1j*pad_phase), pad_mask)
 
         psf = np.fft.fftshift(np.fft.fft2(pad_img))
         # psf *= 1/np.sum(psf)

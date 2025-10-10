@@ -188,7 +188,7 @@ class SegmentedMirror(DM):
             myfits.write_to_fits(self.coords_path, self.act_coords) #np.save(self.coords_path, self.act_coords) 
         
         
-    def compute_global_zern_matrix(self, n_modes):
+    def compute_global_zern_matrix(self, n_modes, zern_mask = None):
         """ Computes or reads the globl Zernike modes interaction matrix """
     
         file_path = os.path.join(self.geom.savepath, str(n_modes) + 'modes_global_zernike_mat.fits')
@@ -197,16 +197,19 @@ class SegmentedMirror(DM):
             self.glob_ZM = myfits.read_fits(file_path)
             return
         except FileNotFoundError:
-            mask = self.mask.copy()
-            scrambled_ZM = matcalc.compute_zernike_matrix(mask, n_modes)
-            ids = np.zeros(np.size(mask),dtype=int)
-            ids[~mask.flatten()] = np.arange(np.sum(1-mask))
+            if zern_mask is None:
+                zern_mask = self.mask.copy()
+            else:
+                zern_mask = np.logical_or(zern_mask, self.mask)
+            scrambled_ZM = matcalc.compute_zernike_matrix(zern_mask, n_modes)
+            ids = np.zeros(np.size(zern_mask),dtype=int)
+            ids[~zern_mask.flatten()] = np.arange(np.sum(1-zern_mask))
             scrambled_ids = ids[self.valid_ids.flatten()]
             self.glob_ZM = scrambled_ZM[scrambled_ids,:]
             myfits.write_to_fits(self.glob_ZM, file_path)
             
         
-    def compute_local_zern_matrix(self, n_modes):
+    def compute_local_zern_matrix(self, n_modes, zern_mask = None):
         """ Computes or reads the local Zernike modes interaction matrix
         distributing the result to all segments and assemling the global
         sparse interaction matrix """
@@ -216,7 +219,11 @@ class SegmentedMirror(DM):
         try:
             ZM = myfits.read_fits(file_path)
         except FileNotFoundError:
-            loc_ZM = matcalc.compute_zernike_matrix(self.geom.local_mask, n_modes)
+            if zern_mask is None:
+                zern_mask = self.geom.local_mask.copy()
+            else:
+                zern_mask = np.logical_or(zern_mask, self.geom.local_mask)
+            loc_ZM = matcalc.compute_zernike_matrix(zern_mask, n_modes)
             ZM = np.tile(loc_ZM,(self.geom.n_hex,1,1))
             myfits.write_to_fits(ZM, file_path)
         
