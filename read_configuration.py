@@ -49,16 +49,19 @@ def read_config(TN):
     opt_par = opt_par.astype(float)
     
     # Mechanical parameters
-    mech_conf = config['MECH']
-    RoC = mech_conf['RoC']
-    thk = mech_conf['thk']
-    len = dm_conf['hex_side']
-    E = mech_conf['E']
-    rho = mech_conf['rho']
-    nu = mech_conf['nu']
+    try:
+        mech_conf = config['MECH']
+        RoC = mech_conf['RoC']
+        thk = mech_conf['thk']
+        len = dm_conf['hex_side']
+        E = mech_conf['E']
+        rho = mech_conf['rho']
+        nu = mech_conf['nu']
 
-    mech_par = np.array([RoC,thk,len,E,rho,nu])
-    mech_par = mech_par.astype(float)
+        mech_par = np.array([RoC,thk,len,E,rho,nu])
+        mech_par = mech_par.astype(float)
+    except KeyError:
+        mech_par = None
 
     save_path = os.path.join(cdir, 'DataFiles', TN)
 

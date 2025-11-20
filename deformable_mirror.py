@@ -168,7 +168,7 @@ class DeformableMirror():
 
         pad_phase = np.pad(phase, ((x_pad,x_pad),(y_pad,y_pad)))
         pad_mask = np.pad(mask, ((x_pad,x_pad),(y_pad,y_pad)), 'constant', constant_values=1)
-        pad_img = np.ma.masked_array((1-pad_mask)*np.exp(1j*pad_phase), pad_mask)
+        pad_img = np.ma.masked_array((1-pad_mask)*np.exp(1j*pad_phase*m2rad), pad_mask)
 
         ff = np.fft.fftshift(np.fft.fft2(pad_img))
         psf = np.abs(ff * np.conj(ff))
